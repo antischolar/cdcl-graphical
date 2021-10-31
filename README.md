@@ -8,6 +8,22 @@ Languages  used will be Reason and TypeScript. Reason will be used for access to
 
 We plan to implement the CDCL algorithm, and deliverables will be the Reason implementation of the CDCL algorithm, as well as a graphical interface. We plan to host this on GitHub and/or Heroku.
 
+## Goals
+### Within Scope
+- Basic CDCL algorithm implementation
+  - Outputs a satisfying assignment or a value representing that the formula is unsatisfiable
+  - Finds the cut based on the first UIP of the graph
+  - Returns the clause database at the time of termination
+- Graphical support to draw the CDCL graph in real-time
+  - Support for different node shapes to signal a decision literal or a forced literal
+  - Ability to step through each stage of the algorithm
+- Historical Record
+  - Keep track of the state of each data structure at each step of the algorithm
+
+### Stretch Goals
+- Support for users to choose which literal to decide at each point in time
+- Graphical support to illustrate other UIP cuts
+
 ## Proposed Schedule
 Nov 01: Project Proposal
 Nov 05: Environment is set up and ready to start implementation
