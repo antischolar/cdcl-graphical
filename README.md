@@ -26,8 +26,13 @@ We plan to implement the CDCL algorithm, and deliverables will be the Reason imp
 
 ## Proposed Schedule
 Nov 01: Project Proposal
+
 Nov 05: Environment is set up and ready to start implementation
+
 Nov 15: CDCL algorithm implementation done
+
 Nov 19: Graphical interface skeleton done
+
 Nov 27: Graphical interface fully fleshed out
+
 Nov 29: Ready to go for presentations
