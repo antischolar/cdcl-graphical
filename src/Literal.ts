@@ -1,9 +1,9 @@
 export default class Literal {
-    neg: boolean;
+    sign: boolean;
     symbol: string;
 
-    constructor(neg: boolean, symbol: string) {
-        this.neg = neg;
+    constructor(sign: boolean, symbol: string) {
+        this.sign = sign;
         this.symbol = symbol;
     }
 }
