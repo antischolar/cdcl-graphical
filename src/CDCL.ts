@@ -32,19 +32,29 @@ export default class CDCL {
             while (this.unitProp() === CDCL.CONFLICT) {
                 if (this.level === 0) {
                     return new Map<String, Boolean>();
+                } else {
+                    let [b, C] = this.analyzeConflict();
+                    this.clauses.push(C);
+                    this.removeAllAtLevel(this.level);
+                    this.level = b;
                 }
             }
+
+            this.decideLiteral();
+            this.level++;
         }
         return this.assignments;
     }
 
     unitProp = (): boolean => {
-        let lit: Literal = this.findUnitClause();
+        let [lit, ind] = this.findUnitClause();
 
         while (lit) {
             this.assignments.set(lit.symbol, lit.sign);
             this.unassigned.delete(lit.symbol);
 
+
+            [lit, ind] = this.findUnitClause();
         }
 
         return CDCL.CONFLICT;
@@ -54,13 +64,52 @@ export default class CDCL {
         return [0, []];
     }
 
-    removeAtLevel = (level: number): void => {
+    removeAllAtLevel = (level: number): void => {
+        for (const vertex of this.implicationGraph.getVertices()){
+            if (vertex.decisionLevel === level) {
+                this.implicationGraph = this.implicationGraph.removeVertex(vertex);
+            }
+        }
+    }
+
+    decideLiteral = (): void => {
+        let literal: string = this.unassigned.values[0];
+        this.unassigned.delete(literal);
+        this.assignments.set(literal, true);
 
     }
 
-    findUnitClause = (): Literal => {
-        let unitClause: Literal[] = this.clauses.find(value => value.length === 1);
-        return unitClause !== undefined ? unitClause[0] : undefined
+    findUnitClause = (): [Literal, number] => {
+        let simplifiedClause: Literal = undefined;
+        let clauseIndex: number = this.clauses.findIndex(clause => {
+            const evaluatedClause = this.evaluateClause(clause);
+            if (typeof evaluatedClause !== "boolean" && evaluatedClause.length === 1) {
+                simplifiedClause = evaluatedClause[0];
+                return true;
+            }
+        });
+        return clauseIndex !== -1 ? [simplifiedClause, clauseIndex] : undefined
+    }
+
+    // evaluates a given clause, return true if it's SAT, false if UNSAT, or a clause with unassigned variables
+    // if not completely evaluated
+    evaluateClause = (clause: Array<Literal>): Array<Literal> | boolean => {
+        let simplifiedClause: Array<Literal> = [];
+
+        clause.forEach(lit => {
+            let result: boolean | Literal = this.evaluateLiteral(lit);
+            if (result === lit) {
+                simplifiedClause.push(lit);
+            } else if (result === true) {
+                return true;
+            }
+        })
+
+        return simplifiedClause.length !== 0 ? simplifiedClause : false;
+    }
+
+    evaluateLiteral = (literal: Literal): boolean | Literal => {
+        return this.assignments.has(literal.symbol) ? this.assignments.get(literal.symbol) === literal.sign : literal;
     }
 
     // finds and returns all UIPs in the implication graph

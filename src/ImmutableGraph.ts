@@ -40,15 +40,52 @@ export default class ImmutableGraph<Type> {
 
     addEdge = (v1: Type, v2: Type): ImmutableGraph<Type> => {
         let newMap = new ImmutableGraph<Type>();
-        newMap.e = this.e.set(v1, this.e.get(v1).add(v2));
         newMap.v = this.v;
+        newMap.e = this.e.set(v1, this.e.get(v1).add(v2));
         return newMap;
     }
 
     addVertex = (v1: Type): ImmutableGraph<Type> => {
         let newMap = new ImmutableGraph<Type>();
-        newMap.e = this.e;
         newMap.v = this.v.add(v1);
+        newMap.e = this.e;
         return newMap;
+    }
+
+    removeVertex = (v1: Type): ImmutableGraph<Type> => {
+        let newMap = new ImmutableGraph<Type>();
+        newMap.v = this.v.delete(v1);
+        newMap.e = this.e.delete(v1);
+
+        let vertexFrom = newMap.hasEdgeToVertex(v1)
+        while (newMap.hasEdgeToVertex(v1)) {
+            newMap.e.set(vertexFrom, newMap.e.get(vertexFrom).delete(v1));
+            vertexFrom = newMap.hasEdgeToVertex(v1);
+        }
+
+        return newMap;
+    }
+
+    removeEdge = (v1: Type, v2: Type): ImmutableGraph<Type> => {
+        if (!this.e.has(v1)) {
+            return this;
+        }
+
+        let newMap = new ImmutableGraph<Type>();
+        newMap.v = this.v;
+        newMap.e = this.e;
+        newMap.e.set(v1, this.e.get(v1).remove(v2));
+
+        return newMap;
+    }
+
+    private hasEdgeToVertex = (v2: Type): Type => {
+        for (const vertex of this.v) {
+            if (this.hasEdge(vertex, v2)) {
+                return vertex;
+            }
+        }
+
+        return undefined;
     }
 }
