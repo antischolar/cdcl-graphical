@@ -53,13 +53,15 @@ export default class CDCL {
         let [lit, ind] = this.findUnitClause();
 
         while (lit) {
+            // console.log(lit);
             this.assignments.set(lit.symbol, lit.sign);
             this.unassigned.delete(lit.symbol);
             let forcedNode: Node = new Node(this.level, lit, ind, false);
-            let forcingNodes: Array<Node> = this.collectForcingNodes(forcedNode.clause);
+            let forcingNodes: Array<Node> = this.collectForcingNodes(forcedNode.clause, lit);
             this.addToGraph(forcedNode, forcingNodes);
 
             let potentialConflict: Node | undefined = this.findConflict();
+            // console.log(potentialConflict);
             if (potentialConflict !== undefined) {
                 let forcingConflictNodes = this.collectForcingNodes(potentialConflict.clause);
                 this.addToGraph(potentialConflict, forcingConflictNodes);
@@ -129,6 +131,10 @@ export default class CDCL {
 
     // picks an unassigned literal to mark as true
     decideLiteral = (): void => {
+        if (this.unassigned.size === 0) {
+            return;
+        }
+
         let literal: Literal = new Literal(true, Array.from(this.unassigned)[0].valueOf());
 
         let ind: number = 0;
@@ -166,7 +172,10 @@ export default class CDCL {
     findConflict = (): Node | undefined => {
         for (let i = 0; i < this.clauses.length; i++) {
             const clause = this.clauses[i]
+            // console.log(i);
+            // console.log(clause);
             let res = this.evaluateClause(clause);
+            // console.log(res);
             if (typeof res === "boolean" && !res) {
                 return new Node(this.level, new Literal(false , ""), i, false, true);
             }
@@ -179,22 +188,38 @@ export default class CDCL {
     // if not completely evaluated
     evaluateClause = (clause: Array<Literal>): Array<Literal> | boolean => {
         let simplifiedClause: Array<Literal> = [];
+        let ret: boolean = false;
 
         clause.forEach(lit => {
             let result: boolean | Literal = this.evaluateLiteral(lit);
-            if (result === lit) {
+            if (typeof result !== "boolean") {
+                // console.log(lit);
                 simplifiedClause.push(lit);
-            } else if (result === true) {
-                return true;
+                // console.log(simplifiedClause);
+            } else if (result) {
+                ret = true;
             }
         })
 
-        return simplifiedClause.length !== 0 ? simplifiedClause : false;
+        // console.log(simplifiedClause);
+
+        if (ret) {
+            return true;
+        } else if (simplifiedClause.length > 0) {
+            return simplifiedClause;
+        }
+
+        return false;
     }
 
     // evaluates a literal to either a boolean value or a Literal
     evaluateLiteral = (literal: Literal): boolean | Literal => {
-        return this.assignments.has(literal.symbol) ? this.assignments.get(literal.symbol) === literal.sign : literal;
+        let assignedValue = this.assignments.get(literal.symbol);
+        if (assignedValue === undefined) {
+            return literal;
+        }
+
+        return assignedValue.valueOf() === literal.sign;
     }
 
     // finds and returns all UIPs in the implication graph
@@ -231,15 +256,21 @@ export default class CDCL {
     }
 
     // finds all nodes in the implication graph that decide the literals in the given clause
-    collectForcingNodes = (clauseInd: number): Array<Node> => {
+    collectForcingNodes = (clauseInd: number, forcedLiteral?: Literal): Array<Node> => {
         let clause = this.clauses[clauseInd];
         let forcingNodes: Array<Node> = [];
 
         clause.forEach(lit => {
-            if (this.assignments.has(lit.symbol)) {
-                let node: Node | undefined = this.implicationGraph.getVertices().find(vertex => vertex.literal === lit);
+            if ((forcedLiteral === undefined || !forcedLiteral.isEqual(lit)) && this.assignments.has(lit.symbol)) {
+                let node: Node | undefined = this.implicationGraph.getVertices().find(vertex => vertex.literal.symbol === lit.symbol);
                 
                 if (node === undefined) {
+                    // console.log(this.clauses[clauseInd]);
+                    this.implicationGraph.getVertices().forEach(vertex => console.log(vertex));
+                    // console.log(this.implicationGraph.getVertices());
+                    console.log(this.assignments);
+                    console.log(lit);
+                    // console.log(this.assignments);
                     throw new Error("assigned literal does not have a node in the implication graph");
                 }
 

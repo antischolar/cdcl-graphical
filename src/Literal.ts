@@ -6,4 +6,8 @@ export default class Literal {
         this.sign = sign;
         this.symbol = symbol;
     }
+
+    isEqual = (lit: Literal): boolean => {
+        return this.sign === lit.sign && this.symbol === lit.symbol;
+    }
 }
