@@ -48,6 +48,7 @@ export default class CDCL {
         return this.assignments;
     }
 
+    // implementation of the UnitProp() function provided in the lecture notes
     unitProp = (): boolean => {
         let [lit, ind] = this.findUnitClause();
 
@@ -71,6 +72,7 @@ export default class CDCL {
         return false;
     }
 
+    // implementation of the AnalyzeConflict() function provided in the lecture notes
     analyzeConflict = (): [number, Array<Literal>] => {
         let firstUIP = this.findFirstUIP();
 
@@ -114,6 +116,7 @@ export default class CDCL {
         return [maxLevel, literalsOnBoundary];
     }
 
+    // removes all nodes at the specified level from the implication graph, as well as from the assignments 
     removeAllAtLevel = (level: number): void => {
         for (const vertex of this.implicationGraph.getVertices()){
             if (vertex.decisionLevel === level) {
@@ -124,6 +127,7 @@ export default class CDCL {
         }
     }
 
+    // picks an unassigned literal to mark as true
     decideLiteral = (): void => {
         let literal: Literal = new Literal(true, Array.from(this.unassigned)[0].valueOf());
 
@@ -145,6 +149,7 @@ export default class CDCL {
         this.addToGraph(node);
     }
 
+    // finds a unit clause in the clause database
     findUnitClause = (): [Literal | undefined, number] => {
         let simplifiedClause: Literal | undefined = undefined;
         let clauseIndex: number = this.clauses.findIndex(clause => {
@@ -157,6 +162,7 @@ export default class CDCL {
         return [simplifiedClause, clauseIndex];
     }
 
+    // finds a conflict in the clause database. Returns undefined in no conflicts are found
     findConflict = (): Node | undefined => {
         for (let i = 0; i < this.clauses.length; i++) {
             const clause = this.clauses[i]
@@ -186,6 +192,7 @@ export default class CDCL {
         return simplifiedClause.length !== 0 ? simplifiedClause : false;
     }
 
+    // evaluates a literal to either a boolean value or a Literal
     evaluateLiteral = (literal: Literal): boolean | Literal => {
         return this.assignments.has(literal.symbol) ? this.assignments.get(literal.symbol) === literal.sign : literal;
     }
@@ -223,6 +230,7 @@ export default class CDCL {
         return firstUIP;
     }
 
+    // finds all nodes in the implication graph that decide the literals in the given clause
     collectForcingNodes = (clauseInd: number): Array<Node> => {
         let clause = this.clauses[clauseInd];
         let forcingNodes: Array<Node> = [];
@@ -243,6 +251,7 @@ export default class CDCL {
     }
 
 
+    // adds a node to the implication graph, along with edges from its forcing nodes (if relevant)
     addToGraph = (node: Node, forcingNodes: Array<Node> = []): void => {
         this.implicationGraph = this.implicationGraph.addVertex(node);
 
@@ -279,7 +288,8 @@ export default class CDCL {
         return allPaths;
     }
 
-    static intersection = (set1: Map<Node, number>, set2: Map<Node, number>): Map<Node, number> => {
+    // finds the intersection of the keys of the two maps, and sets their values to the max of both
+    private static intersection = (set1: Map<Node, number>, set2: Map<Node, number>): Map<Node, number> => {
         let intersect: Map<Node, number> = new Map<Node, number>();
 
         for (let elem of set1.entries()) {
@@ -297,7 +307,8 @@ export default class CDCL {
         return intersect;
     }
 
-    static union = (set1: Map<Node, number>, set2: Map<Node, number>): Map<Node, number> => {
+    // finds the union of the keys of the two maps
+    private static union = (set1: Map<Node, number>, set2: Map<Node, number>): Map<Node, number> => {
         let union: Map<Node, number> = new Map<Node, number>();
 
         for (let elem of set1.entries()) {
