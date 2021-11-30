@@ -5,12 +5,14 @@ export default class Node {
     literal: Literal;
     clause: number;
     isDecisionLiteral: boolean;
+    isConflictNode: boolean;
 
-    constructor(decisionLevel: number, literal: Literal, clause: number, isDecisionLiteral: boolean) {
+    constructor(decisionLevel: number, literal: Literal, clause: number, isDecisionLiteral: boolean, isConflictNode: boolean = false) {
         this.decisionLevel = decisionLevel;
         this.literal = literal;
         this.clause = clause;
         this.isDecisionLiteral = isDecisionLiteral;
+        this.isConflictNode = isConflictNode;
     }
 
     // taken from here: https://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
