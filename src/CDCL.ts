@@ -103,6 +103,11 @@ export default class CDCL {
     analyzeConflict = (): [number, Array<Literal>] => {
         // console.log("analyze conflict is called");
         const firstUIP = this.findFirstUIP();
+        const conflictNode = this.getConflictNode();
+
+        if (conflictNode === undefined || firstUIP === undefined) {
+            throw new Error("graph is malformed");
+        }
 
         let flattenedPaths: Map<Node, number> = new Map<Node, number>();
 
@@ -111,12 +116,19 @@ export default class CDCL {
         });
 
         const allNodesOnConflictSide: Set<Node> = new Set<Node>(flattenedPaths.keys());
+        // if (firstUIP.literal.symbol === "p3") {
+        //     console.log("LOOK HERE")
+        //     console.log(Array.from(allNodesOnConflictSide));
+        //     console.log(this.assignments);
+        // }
+
         allNodesOnConflictSide.delete(firstUIP);
+        allNodesOnConflictSide.add(conflictNode);
 
         const boundaryNodes: Set<Node> = new Set<Node>();
         this.implicationGraph.getVertices().forEach(v1 => {
             this.implicationGraph.getNeighbors(v1).forEach(v2 => {
-                if (!allNodesOnConflictSide.has(v1) && allNodesOnConflictSide.has(v2) && !boundaryNodes.has(v1)) {
+                if (!allNodesOnConflictSide.has(v1) && allNodesOnConflictSide.has(v2)) {
                     boundaryNodes.add(v1);
                 }
                 return true;
@@ -131,6 +143,15 @@ export default class CDCL {
         // this.implicationGraph.getVertices().forEach(v => console.log(v.literal))
         // console.log("done vertices")
         const boundaryNodesList = Array.from(boundaryNodes);
+        // if (firstUIP.literal.symbol === "p3") {
+        //     console.log("BOUNDARY LIST")
+        //     console.log(boundaryNodesList);
+        //     console.log("VERTICES")
+        //     this.implicationGraph.getVertices().toSet().forEach(val => {
+        //         console.log(val)
+        //     })
+        // }
+
         const literalsOnBoundary: Array<Literal> = boundaryNodesList.map(n => {
             return new Literal(!n.literal.sign, n.literal.symbol);
         });
@@ -142,7 +163,10 @@ export default class CDCL {
                 maxLevel = n.decisionLevel;
             }
         });
-        // console.log(maxLevel);
+        // if (firstUIP.literal.symbol === "p3") {
+        //     console.log(maxLevel);
+        // }
+
         return [maxLevel, literalsOnBoundary];
     }
 
@@ -293,7 +317,7 @@ export default class CDCL {
         let clause = this.clauses[clauseInd];
         let forcingNodes: Array<Node> = [];
 
-        clause.forEach(lit => {
+        clause.forEach(lit => {            
             if ((forcedLiteral === undefined || !forcedLiteral.isEqual(lit)) && this.assignments.has(lit.symbol)) {
                 let node: Node | undefined = this.implicationGraph.getVertices().find(vertex => vertex.literal.symbol === lit.symbol);
                 
@@ -306,11 +330,13 @@ export default class CDCL {
                     // console.log(this.assignments);
                     throw new Error("assigned literal does not have a node in the implication graph");
                 }
-
                 forcingNodes.push(node);
             }
         })
-
+        // if (clauseInd === 4) {
+        //     console.log("NODE")
+        //     console.log(forcingNodes)
+        // }
         return forcingNodes;
     }
 
@@ -355,6 +381,10 @@ export default class CDCL {
         findAllPathsHelper(allPaths, path);
 
         return allPaths;
+    }
+
+    getConflictNode = (): Node | undefined => {
+        return this.implicationGraph.getVertices().find(node => node.isConflictNode);
     }
 
     // finds the intersection of the keys of the two maps, and sets their values to the max of both
