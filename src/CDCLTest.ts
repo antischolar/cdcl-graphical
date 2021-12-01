@@ -79,7 +79,7 @@ let allClauses = [clause1, clause2, clause3, clause4, clause5, clause6, clause7,
 let clauses: Array<Array<Literal>> = []
 
 allClauses.forEach(c => {
-    if (Math.random() > 0.8) {
+    if (Math.random() > 0) {
         clauses.push(c)
     }
 });
@@ -89,10 +89,13 @@ allClauses.forEach(c => {
 
 let CDCLInstance1 = new CDCL(clauses)
 let CDCLInstance1Checker = new NaiveSAT(clauses);
-let assignment1 = CDCLInstance1.solve();
 let assignment1Arr = [];
-let assignment2 = CDCLInstance1Checker.solve();
 let assignment2Arr = [];
+
+let date = new Date();
+
+let timeStart = date.getTime();
+let assignment1 = CDCLInstance1.solve();
 while (assignment1.size != 0) {
     // if (assignment.get("p1") && !assignment.get("p2") && !assignment.get("p4")) {
         // console.log(assignment);
@@ -105,7 +108,13 @@ while (assignment1.size != 0) {
     CDCLInstance1.addClause(negationClause1);
     assignment1 = CDCLInstance1.solve();
 }
+let timeEnd = date.getTime();
 
+console.log(`CDCL took ${timeEnd - timeStart} ms`);
+
+
+timeStart = date.getTime();
+let assignment2 = CDCLInstance1Checker.solve();
 while (assignment2.size != 0) {
     // if (assignment.get("p1") && !assignment.get("p2") && !assignment.get("p4")) {
         // console.log(assignment);
@@ -118,8 +127,11 @@ while (assignment2.size != 0) {
     CDCLInstance1Checker.addClause(negationClause2);
     assignment2 = CDCLInstance1Checker.solve();
 }
+timeEnd = date.getTime();
 
-console.log(assignmentsAreEqual(assignment1Arr, assignment2Arr));
+console.log(`naive SAT took ${timeEnd - timeStart} ms`);
+
+console.log(`are the assignments equal: ${assignmentsAreEqual(assignment1Arr, assignment2Arr)}`);
 // console.log(assignment1Arr);
 // console.log(assignment2Arr);
 
