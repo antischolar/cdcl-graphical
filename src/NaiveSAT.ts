@@ -88,9 +88,7 @@ export default class NaiveSAT {
         clause.forEach(lit => {
             let result: boolean | Literal = this.evaluateLiteral(lit);
             if (typeof result !== "boolean") {
-                // console.log(lit);
                 simplifiedClause.push(lit);
-                // console.log(simplifiedClause);
             } else if (result) {
                 ret = true;
             }

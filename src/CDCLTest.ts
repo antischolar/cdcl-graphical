@@ -74,7 +74,15 @@ let clause9 = [notliteral1, notliteral2];
 let clause10 = [notliteral1, literal2, literal4];
 
 
-let clauses = [clause1, clause2, clause3];
+let allClauses = [clause1, clause2, clause3, clause4, clause5, clause6, clause7, clause8, clause9, clause10];
+
+let clauses: Array<Array<Literal>> = []
+
+allClauses.forEach(c => {
+    if (Math.random() > 0.8) {
+        clauses.push(c)
+    }
+});
 
 // let clauses = [clause1]
 // let clauses = [clause1, clause7, clause8, clause9, clause10];
@@ -123,7 +131,7 @@ console.log(assignmentsAreEqual(assignment1Arr, assignment2Arr));
 // CDCLInstance1.assignments.set("p3", false);
 // CDCLInstance1.assignments.set("p4", true);
 // console.log(CDCLInstance1.findConflict() === undefined);
-console.log(CDCLInstance1.clauses);
+// console.log(CDCLInstance1.clauses);
 // console.log(assignment);
 // console.log(CDCLInstance1.clauses);
 
