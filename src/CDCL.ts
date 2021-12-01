@@ -46,9 +46,9 @@ export default class CDCL {
                     return new Map<String, Boolean>();
                 } else {
                     const [b, C] = this.analyzeConflict();
-                    console.log(C);
-                    console.log(this.level)
-                    console.log(b)
+                    // console.log(C);
+                    // console.log(this.level)
+                    // console.log(b)
                     this.clauses.push(C);
                     this.removeAllAtLevelGreaterThan(b);
                     this.level = b;
@@ -113,28 +113,35 @@ export default class CDCL {
         const allNodesOnConflictSide: Set<Node> = new Set<Node>(flattenedPaths.keys());
         allNodesOnConflictSide.delete(firstUIP);
 
-        const boundaryNodes: Array<Node> = [];
+        const boundaryNodes: Set<Node> = new Set<Node>();
         this.implicationGraph.getVertices().forEach(v1 => {
             this.implicationGraph.getNeighbors(v1).forEach(v2 => {
-                if (allNodesOnConflictSide.has(v2)) {
-                    boundaryNodes.push(v1);
+                if (!allNodesOnConflictSide.has(v1) && allNodesOnConflictSide.has(v2) && !boundaryNodes.has(v1)) {
+                    boundaryNodes.add(v1);
                 }
                 return true;
             });
             return true;
         });
 
-        const literalsOnBoundary: Array<Literal> = boundaryNodes.map(n => {
+        // console.log("boundary nodes")
+        // console.log(boundaryNodes.size)
+        // console.log(boundaryNodes)
+        // console.log("vertices")
+        // this.implicationGraph.getVertices().forEach(v => console.log(v.literal))
+        // console.log("done vertices")
+        const boundaryNodesList = Array.from(boundaryNodes);
+        const literalsOnBoundary: Array<Literal> = boundaryNodesList.map(n => {
             return new Literal(!n.literal.sign, n.literal.symbol);
         });
 
-        const maxLevel: number = boundaryNodes.reduce((prev, currNode) => {
-            if ((currNode !== firstUIP && currNode.decisionLevel > prev.decisionLevel) || (prev === firstUIP)) {
-                return currNode;
+        let maxLevel: number = -1;
+        
+        boundaryNodesList.forEach(n => {
+            if (n !== firstUIP && n.decisionLevel > maxLevel) {
+                maxLevel = n.decisionLevel;
             }
-
-            return prev;
-        }).decisionLevel;
+        });
 
         return [maxLevel, literalsOnBoundary];
     }
