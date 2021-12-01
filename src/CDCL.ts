@@ -142,7 +142,7 @@ export default class CDCL {
                 maxLevel = n.decisionLevel;
             }
         });
-
+        // console.log(maxLevel);
         return [maxLevel, literalsOnBoundary];
     }
 

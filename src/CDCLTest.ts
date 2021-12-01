@@ -1,5 +1,6 @@
 import CDCL from "./cdcl";
 import Literal from "./Literal";
+import NaiveSAT from "./NaiveSAT";
 
 let generateNegationClause = (a: Map<String, Boolean>): Array<Literal> => {
     let c: Array<Literal> = [];
@@ -8,6 +9,24 @@ let generateNegationClause = (a: Map<String, Boolean>): Array<Literal> => {
         c.push(literal);
     }
     return c;
+}
+
+let assignmentsAreEqual = (a: Array<Map<String, Boolean>>, b: Array<Map<String, Boolean>>): boolean => {
+    let satisfied = true;
+
+    a.forEach(map1 => {
+        let val = b.find(map2 => {
+            let res = map1.size === map2.size;
+            for (const entry of map1.entries()) {
+                res = res && (entry[1] === map2.get(entry[0]));
+            }
+            return res;
+        })
+        if (val === undefined) {
+            satisfied = false;
+        }
+    });
+    return satisfied && a.length === b.length;
 }
 
 let literal1: Literal = new Literal(true, "p1");
@@ -39,27 +58,39 @@ let clause9 = [notliteral1, notliteral2];
 let clause10 = [notliteral1, literal2, literal4];
 
 
-// let clauses = [clause1, clause2, clause3, clause4, clause5, clause6];
+let clauses = [clause1, clause2, clause3, clause4, clause5, clause6];
 
 // let clauses = [clause1]
-let clauses = [clause1, clause7, clause8, clause9, clause10];
+// let clauses = [clause1, clause7, clause8, clause9, clause10];
 
 let CDCLInstance1 = new CDCL(clauses)
-let assignment = CDCLInstance1.solve();
+let CDCLInstance1Checker = new NaiveSAT(clauses);
+let assignment1 = CDCLInstance1.solve();
+let assignment1Arr = [];
+let assignment2 = CDCLInstance1Checker.solve();
+let assignment2Arr = [];
+while (assignment1.size != 0 && assignment2.size != 0) {
+    // if (assignment.get("p1") && !assignment.get("p2") && !assignment.get("p4")) {
+        // console.log(assignment);
+        // console.log(CDCLInstance1.clauses);
+    // }
+    assignment1Arr.push(assignment1);
+    assignment2Arr.push(assignment2);
 
-// while (assignment.size != 0) {
-//     // if (assignment.get("p1") && !assignment.get("p2") && !assignment.get("p4")) {
-//         console.log(assignment);
-//         // console.log(CDCLInstance1.clauses);
-//     // }
-//     const negationClause = generateNegationClause(assignment);
-//     CDCLInstance1 = new CDCL(CDCLInstance1.clauses);
-//     CDCLInstance1.addClause(negationClause);
-//     assignment = CDCLInstance1.solve();
-// }
+    const negationClause1 = generateNegationClause(assignment1);
+    const negationClause2 = generateNegationClause(assignment2);
+    CDCLInstance1 = new CDCL(CDCLInstance1.clauses);
+    CDCLInstance1.addClause(negationClause1);
+    CDCLInstance1Checker = new NaiveSAT(CDCLInstance1Checker.clauses);
+    CDCLInstance1Checker.addClause(negationClause2);
+    assignment1 = CDCLInstance1.solve();
+    assignment2 = CDCLInstance1Checker.solve();
+}
 
-console.log(assignment);
-console.log(CDCLInstance1.clauses);
+console.log(assignmentsAreEqual(assignment1Arr, assignment2Arr));
+
+// console.log(assignment);
+// console.log(CDCLInstance1.clauses);
 
 
 // let clause11 = [notliteral1, notliteral2, notliteral5];
