@@ -2,54 +2,57 @@ import Immutable, { Stack } from "immutable";
 import ImmutableGraph from "./ImmutableGraph";
 import Literal from "./Literal";
 import Node from "./Node";
+import Snapshot from "./Snapshot";
 
 export default class CDCL {
-    clauses: Array<Array<Literal>>;
-    assignments: Map<String, Boolean>;
-    unassigned: Set<String>;
+    clauses: Immutable.List<Array<Literal>>;
+    assignments: Immutable.Map<String, Boolean>;
+    unassigned: Immutable.Set<String>;
     implicationGraph: ImmutableGraph<Node>;
     level: number;
 
+    history: Array<Snapshot>;
     private readonly CONFLICT: boolean = true;
 
     constructor(clauses: Array<Array<Literal>>) {
-        this.clauses = [];
-        this.unassigned = new Set<String>();
+        this.clauses = Immutable.List();
+        this.unassigned = Immutable.Set<String>();
         this.implicationGraph = new ImmutableGraph<Node>();
         clauses.forEach(c => {
             const clause: Array<Literal> = [];
             c.forEach(literal => {
                 clause.push({...literal});
-                this.unassigned.add(literal.symbol);
+                this.unassigned = this.unassigned.add(literal.symbol);
             });
-            this.clauses.push(clause);
+            this.clauses = this.clauses.push(clause);
         });
-        this.assignments = new Map();
+        this.assignments = Immutable.Map<String, Boolean>();
         this.level = 0;
+        this.history = []
     }
 
     addClause = (clause: Array<Literal>): void => {
-        this.clauses.push(clause);
+        this.clauses = this.clauses.push(clause);
 
         clause.forEach(lit => {
             if (!this.assignments.has(lit.symbol)) {
-                this.unassigned.add(lit.symbol);
+                this.unassigned = this.unassigned.add(lit.symbol);
             }
         })
     }
 
     // returns a map that is a satisfying assignment
-    solve = (): Map<String, Boolean> => {
+    solve = (): Immutable.Map<String, Boolean> => {
         while (this.unassigned.size > 0) {
             while (this.unitProp() === this.CONFLICT) {
                 if (this.level === 0) {
-                    return new Map<String, Boolean>();
+                    return Immutable.Map<String, Boolean>();
                 } else {
                     const [b, C] = this.analyzeConflict();
                     // console.log(C);
                     // console.log(this.level)
                     // console.log(b)
-                    this.clauses.push(C);
+                    this.clauses = this.clauses.push(C);
                     this.removeAllAtLevelGreaterThan(b);
                     this.level = b;
                 }
@@ -79,8 +82,8 @@ export default class CDCL {
 
         while (lit) {
             // console.log(lit);
-            this.assignments.set(lit.symbol, lit.sign);
-            this.unassigned.delete(lit.symbol);
+            this.assignments = this.assignments.set(lit.symbol, lit.sign);
+            this.unassigned = this.unassigned.delete(lit.symbol);
             const forcedNode: Node = new Node(this.level, lit, ind, false);
             const forcingNodes: Array<Node> = this.collectForcingNodes(forcedNode.clause, lit);
             this.addToGraph(forcedNode, forcingNodes);
@@ -152,12 +155,13 @@ export default class CDCL {
         for (const vertex of vertices) {
             if (vertex.decisionLevel > level) {
                 if (!vertex.isConflictNode) {
-                    this.assignments.delete(vertex.literal.symbol);
-                    this.unassigned.add(vertex.literal.symbol);
+                    this.assignments = this.assignments.delete(vertex.literal.symbol);
+                    this.unassigned = this.unassigned.add(vertex.literal.symbol);
                 }
                 this.implicationGraph = this.implicationGraph.removeVertex(vertex);
             }
         }
+        this.makeSnapshot();
     }
 
     // picks an unassigned literal to mark as true
@@ -169,8 +173,12 @@ export default class CDCL {
         let literal: Literal = new Literal(true, Array.from(this.unassigned)[0].valueOf());
 
         let ind: number = 0;
-        for (let i = 0; i < this.clauses.length; i++) {
-            let clause: Array<Literal> = this.clauses[i];
+        for (let i = 0; i < this.clauses.size; i++) {
+            let clause: Array<Literal> | undefined = this.clauses.get(i);
+
+            if (clause === undefined) {
+                throw new Error("array out of bounds access");
+            }
 
             if (clause.find(l => l.symbol === literal.symbol) !== undefined) {
                 ind = i;
@@ -178,8 +186,8 @@ export default class CDCL {
             }
         }
 
-        this.unassigned.delete(literal.symbol);
-        this.assignments.set(literal.symbol, true);
+        this.unassigned = this.unassigned.delete(literal.symbol);
+        this.assignments = this.assignments.set(literal.symbol, true);
 
         let node: Node = new Node(this.level, literal, ind, true);
 
@@ -202,8 +210,13 @@ export default class CDCL {
 
     // finds a conflict in the clause database. Returns undefined in no conflicts are found
     findConflict = (): Node | undefined => {
-        for (let i = 0; i < this.clauses.length; i++) {
-            const clause = this.clauses[i];
+        for (let i = 0; i < this.clauses.size; i++) {
+            const clause: Array<Literal> | undefined = this.clauses.get(i);
+
+            if (clause === undefined) {
+                throw new Error("array out of bounds access");
+            }
+
             let res = this.evaluateClause(clause);
             if (typeof res === "boolean" && !res) {
                 return new Node(this.level, new Literal(false , ""), i, false, true);
@@ -290,8 +303,12 @@ export default class CDCL {
     // finds all nodes in the implication graph that decide the literals in the given clause. Ignores the forcedLiteral
     // argument
     collectForcingNodes = (clauseInd: number, forcedLiteral?: Literal): Array<Node> => {
-        let clause = this.clauses[clauseInd];
+        let clause: Array<Literal> | undefined = this.clauses.get(clauseInd);
         let forcingNodes: Array<Node> = [];
+
+        if (clause === undefined) {
+            throw new Error("array out of bounds access");
+        }
 
         clause.forEach(lit => {
             if ((forcedLiteral === undefined || !forcedLiteral.isEqual(lit)) && this.assignments.has(lit.symbol)) {
@@ -322,6 +339,8 @@ export default class CDCL {
         forcingNodes.forEach(fromNode => {
             this.implicationGraph = this.implicationGraph.addEdge(fromNode, node);
         });
+
+        this.makeSnapshot();
     }
 
     // finds and returns all nodes on all paths starting at the given node and ending at the conflict clause
@@ -389,5 +408,10 @@ export default class CDCL {
         }
 
         return union;
+    }
+
+    private makeSnapshot = (): void => {
+        const snap = new Snapshot(this.clauses, this.assignments, this.unassigned, this.implicationGraph, this.level);
+        this.history.push(snap);
     }
 }

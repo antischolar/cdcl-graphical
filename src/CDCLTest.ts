@@ -41,25 +41,25 @@ let clause10 = [notliteral1, literal2, literal4];
 
 // let clauses = [clause1, clause2, clause3, clause4, clause5, clause6];
 
-// let clauses = [clause1]
-let clauses = [clause1, clause7, clause8, clause9, clause10];
+let clauses = [clause1]
+// let clauses = [clause1, clause7, clause8, clause9, clause10];
 
 let CDCLInstance1 = new CDCL(clauses)
 let assignment = CDCLInstance1.solve();
 
-// while (assignment.size != 0) {
-//     // if (assignment.get("p1") && !assignment.get("p2") && !assignment.get("p4")) {
-//         console.log(assignment);
-//         // console.log(CDCLInstance1.clauses);
-//     // }
-//     const negationClause = generateNegationClause(assignment);
-//     CDCLInstance1 = new CDCL(CDCLInstance1.clauses);
-//     CDCLInstance1.addClause(negationClause);
-//     assignment = CDCLInstance1.solve();
-// }
+while (assignment.size != 0) {
+    // if (assignment.get("p1") && !assignment.get("p2") && !assignment.get("p4")) {
+        console.log(new Map(assignment.toKeyedSeq()));
+        // console.log(CDCLInstance1.clauses);
+    // }
+    const negationClause = generateNegationClause(new Map(assignment.toKeyedSeq()));
+    CDCLInstance1 = new CDCL(Array.from(CDCLInstance1.clauses));
+    CDCLInstance1.addClause(negationClause);
+    assignment = CDCLInstance1.solve();
+}
 
-console.log(assignment);
-console.log(CDCLInstance1.clauses);
+// console.log(assignment);
+// console.log(CDCLInstance1.clauses);
 
 
 // let clause11 = [notliteral1, notliteral2, notliteral5];
