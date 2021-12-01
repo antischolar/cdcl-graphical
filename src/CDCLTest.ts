@@ -1,6 +1,15 @@
 import CDCL from "./cdcl";
 import Literal from "./Literal";
 
+let generateNegationClause = (a: Map<String, Boolean>): Array<Literal> => {
+    let c: Array<Literal> = [];
+    for (const entry of a.entries()) {
+        const literal = new Literal(!entry[1].valueOf(), entry[0].valueOf());
+        c.push(literal);
+    }
+    return c;
+}
+
 let literal1: Literal = new Literal(true, "p1");
 let notliteral1: Literal = new Literal(false, "p1");
 let literal2: Literal = new Literal(true, "p2");
@@ -24,17 +33,37 @@ let clause3 = [notliteral3, notliteral4];
 let clause4 = [literal4, literal5, literal6];
 let clause5 = [notliteral5, literal7];
 let clause6 = [notliteral6, literal7, notliteral8];
+let clause7 = [notliteral1, notliteral2, notliteral4];
+let clause8 = [notliteral1, notliteral2, literal4];
+let clause9 = [notliteral1, notliteral2];
+let clause10 = [notliteral1, literal2, literal4];
 
-let clauses = [clause1, clause2, clause3, clause4, clause5, clause6];
+
+// let clauses = [clause1, clause2, clause3, clause4, clause5, clause6];
+
+let clauses = [clause1, clause7, clause8, clause9, clause10];
 
 let CDCLInstance1 = new CDCL(clauses)
+let assignment = CDCLInstance1.solve();
 
-console.log(CDCLInstance1.solve());
+// while (assignment.size != 0) {
+//     if (assignment.get("p1") && !assignment.get("p2") && !assignment.get("p4")) {
+//         console.log(assignment);
+//         console.log(CDCLInstance1.clauses);
+//     }
+//     const negationClause = generateNegationClause(assignment);
+//     CDCLInstance1 = new CDCL(CDCLInstance1.clauses);
+//     CDCLInstance1.addClause(negationClause);
+//     assignment = CDCLInstance1.solve();
+// }
 
-let clause11 = [notliteral1];
-let clause12 = [literal1];
+console.log(assignment);
 
-let clauses1 = [clause11, clause12];
 
-let CDCLInstance2 = new CDCL(clauses1);
-console.log(CDCLInstance2.solve());
+// let clause11 = [notliteral1, notliteral2, notliteral5];
+// let clause12 = [notliteral3, notliteral4, notliteral6];
+
+// let clauses1 = [clause11, clause12];
+
+// let CDCLInstance2 = new CDCL(clauses1);
+// console.log(CDCLInstance2.solve());

@@ -60,7 +60,7 @@ export default class ImmutableGraph<Type> {
         while (newMap.hasEdgeToVertex(v1)) {
             let vertexFrom = newMap.getVertexThatHasEdgeToVertex(v1);
 
-            newMap.e.set(vertexFrom, newMap.e.get(vertexFrom, Immutable.Set<Type>()).delete(v1));
+            newMap.e = newMap.e.set(vertexFrom, newMap.e.get(vertexFrom, Immutable.Set<Type>()).delete(v1));
         }
 
         return newMap;

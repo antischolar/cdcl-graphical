@@ -28,6 +28,16 @@ export default class CDCL {
         this.level = 0;
     }
 
+    addClause = (clause: Array<Literal>): void => {
+        this.clauses.push(clause);
+
+        clause.forEach(lit => {
+            if (!this.assignments.has(lit.symbol)) {
+                this.unassigned.add(lit.symbol);
+            }
+        })
+    }
+
     // returns a map that is a satisfying assignment
     solve = (): Map<String, Boolean> => {
         while (this.unassigned.size > 0) {
@@ -35,35 +45,50 @@ export default class CDCL {
                 if (this.level === 0) {
                     return new Map<String, Boolean>();
                 } else {
-                    let [b, C] = this.analyzeConflict();
+                    const [b, C] = this.analyzeConflict();
+                    console.log(C);
+                    console.log(this.level)
+                    console.log(b)
                     this.clauses.push(C);
-                    this.removeAllAtLevel(this.level);
+                    this.removeAllAtLevelGreaterThan(b);
                     this.level = b;
                 }
             }
 
             this.level++;
+            // if (this.findConflict() !== undefined) {
+            //     console.log("problem found1")
+            //     console.log(Array.from(this.unassigned)[0]);
+            // }
             this.decideLiteral();
         }
+
+        // if (this.findConflict() !== undefined) {
+        //     console.log("problem found")
+        // }
         return this.assignments;
     }
 
     // implementation of the UnitProp() function provided in the lecture notes
     unitProp = (): boolean => {
+        // if (this.findConflict() !== undefined) {
+        //     return this.CONFLICT;
+        // }
+
         let [lit, ind] = this.findUnitClause();
 
         while (lit) {
             // console.log(lit);
             this.assignments.set(lit.symbol, lit.sign);
             this.unassigned.delete(lit.symbol);
-            let forcedNode: Node = new Node(this.level, lit, ind, false);
-            let forcingNodes: Array<Node> = this.collectForcingNodes(forcedNode.clause, lit);
+            const forcedNode: Node = new Node(this.level, lit, ind, false);
+            const forcingNodes: Array<Node> = this.collectForcingNodes(forcedNode.clause, lit);
             this.addToGraph(forcedNode, forcingNodes);
 
-            let potentialConflict: Node | undefined = this.findConflict();
+            const potentialConflict: Node | undefined = this.findConflict();
             // console.log(potentialConflict);
             if (potentialConflict !== undefined) {
-                let forcingConflictNodes = this.collectForcingNodes(potentialConflict.clause);
+                const forcingConflictNodes = this.collectForcingNodes(potentialConflict.clause);
                 this.addToGraph(potentialConflict, forcingConflictNodes);
                 return this.CONFLICT;
             }
@@ -76,54 +101,53 @@ export default class CDCL {
 
     // implementation of the AnalyzeConflict() function provided in the lecture notes
     analyzeConflict = (): [number, Array<Literal>] => {
-        let firstUIP = this.findFirstUIP();
+        // console.log("analyze conflict is called");
+        const firstUIP = this.findFirstUIP();
 
         let flattenedPaths: Map<Node, number> = new Map<Node, number>();
 
-        this.findAllPathsFromNode(firstUIP).forEach(path => CDCL.union(flattenedPaths, path));
+        this.findAllPathsFromNode(firstUIP).forEach(path => {
+            flattenedPaths = CDCL.union(flattenedPaths, path)
+        });
 
-        let allNodesOnConflictSide: Set<Node> = new Set<Node>(flattenedPaths.keys());
+        const allNodesOnConflictSide: Set<Node> = new Set<Node>(flattenedPaths.keys());
         allNodesOnConflictSide.delete(firstUIP);
 
-        let boundaryNodes: Array<Node> = [];
+        const boundaryNodes: Array<Node> = [];
         this.implicationGraph.getVertices().forEach(v1 => {
             this.implicationGraph.getNeighbors(v1).forEach(v2 => {
-                if (allNodesOnConflictSide.has(v2) && v1 !== firstUIP) {
+                if (allNodesOnConflictSide.has(v2)) {
                     boundaryNodes.push(v1);
                 }
                 return true;
             });
+            return true;
         });
 
-        let literalsOnBoundary: Array<Literal> = boundaryNodes.map(n => {
-            let valInAssignments: Boolean | undefined = this.assignments.get(n.literal.symbol);
-            
-            if (valInAssignments=== undefined) {
-                throw new Error("assignment was undefined in the map. This is more likely an error in TS");
-            }
-
-            let sign: boolean = valInAssignments.valueOf();
-
-            return new Literal(sign, n.literal.symbol);
+        const literalsOnBoundary: Array<Literal> = boundaryNodes.map(n => {
+            return new Literal(!n.literal.sign, n.literal.symbol);
         });
-        let maxLevel: number = boundaryNodes.reduce((prev, currNode) => {
-            if (currNode !== firstUIP && currNode.decisionLevel > prev.decisionLevel) {
+
+        const maxLevel: number = boundaryNodes.reduce((prev, currNode) => {
+            if ((currNode !== firstUIP && currNode.decisionLevel > prev.decisionLevel) || (prev === firstUIP)) {
                 return currNode;
             }
 
             return prev;
         }).decisionLevel;
 
-
         return [maxLevel, literalsOnBoundary];
     }
 
-    // removes all nodes at the specified level from the implication graph, as well as from the assignments 
-    removeAllAtLevel = (level: number): void => {
-        for (const vertex of this.implicationGraph.getVertices()){
-            if (vertex.decisionLevel === level) {
-                this.assignments.delete(vertex.literal.symbol);
-                this.unassigned.add(vertex.literal.symbol);
+    // removes all nodes strictly greater than the specified level from the implication graph, as well as from the assignments 
+    removeAllAtLevelGreaterThan = (level: number): void => {
+        const vertices = this.implicationGraph.getVertices();
+        for (const vertex of vertices) {
+            if (vertex.decisionLevel > level) {
+                if (!vertex.isConflictNode) {
+                    this.assignments.delete(vertex.literal.symbol);
+                    this.unassigned.add(vertex.literal.symbol);
+                }
                 this.implicationGraph = this.implicationGraph.removeVertex(vertex);
             }
         }
@@ -164,6 +188,7 @@ export default class CDCL {
                 simplifiedClause = evaluatedClause[0];
                 return true;
             }
+            return false;
         });
         return [simplifiedClause, clauseIndex];
     }
@@ -171,11 +196,8 @@ export default class CDCL {
     // finds a conflict in the clause database. Returns undefined in no conflicts are found
     findConflict = (): Node | undefined => {
         for (let i = 0; i < this.clauses.length; i++) {
-            const clause = this.clauses[i]
-            // console.log(i);
-            // console.log(clause);
+            const clause = this.clauses[i];
             let res = this.evaluateClause(clause);
-            // console.log(res);
             if (typeof res === "boolean" && !res) {
                 return new Node(this.level, new Literal(false , ""), i, false, true);
             }
@@ -188,7 +210,7 @@ export default class CDCL {
     // if not completely evaluated
     evaluateClause = (clause: Array<Literal>): Array<Literal> | boolean => {
         let simplifiedClause: Array<Literal> = [];
-        let ret: boolean = false;
+        let ret = false;
 
         clause.forEach(lit => {
             let result: boolean | Literal = this.evaluateLiteral(lit);
@@ -200,8 +222,6 @@ export default class CDCL {
                 ret = true;
             }
         })
-
-        // console.log(simplifiedClause);
 
         if (ret) {
             return true;
@@ -222,23 +242,28 @@ export default class CDCL {
         return assignedValue.valueOf() === literal.sign;
     }
 
-    // finds and returns all UIPs in the implication graph
+    // finds and returns the first UIP in the implication graph
     findFirstUIP = (): Node => {
         let vertices: Immutable.Set<Node> = this.implicationGraph.getVertices();
         let highestDecisionLiteralNode: Node | undefined = vertices.find(n => n.decisionLevel === this.level && n.isDecisionLiteral);
         
         if (highestDecisionLiteralNode === undefined) {
-            throw new Error("did not find a decision at the current decision level");
+            throw new Error("did not find a decision node at the current decision level");
         }
 
         let potentialUIPs: Map<Node, number> = new Map<Node, number>();
-        vertices.toSet().forEach(vertex => potentialUIPs.set(vertex, 0));
+        vertices.forEach(vertex => {
+            potentialUIPs.set(vertex, 0);
+            return true;
+        });
         let allPaths: Array<Map<Node, number>> = this.findAllPathsFromNode(highestDecisionLiteralNode);
 
-        allPaths.forEach(path => potentialUIPs = CDCL.intersection(potentialUIPs, path));
+        allPaths.forEach(path => {
+            potentialUIPs = CDCL.intersection(potentialUIPs, path);
+        });
 
         let firstUIP: Node | undefined = undefined;
-        let maxDepth: number = 0;
+        let maxDepth: number = -1;
 
         for (const entry of potentialUIPs.entries()) {
             if (entry[1] > maxDepth) {
@@ -248,14 +273,15 @@ export default class CDCL {
         }
 
         if (firstUIP === undefined) {
+            console.log(potentialUIPs);
             throw new Error("no UIP was found");
         }
-
 
         return firstUIP;
     }
 
-    // finds all nodes in the implication graph that decide the literals in the given clause
+    // finds all nodes in the implication graph that decide the literals in the given clause. Ignores the forcedLiteral
+    // argument
     collectForcingNodes = (clauseInd: number, forcedLiteral?: Literal): Array<Node> => {
         let clause = this.clauses[clauseInd];
         let forcingNodes: Array<Node> = [];
@@ -286,10 +312,12 @@ export default class CDCL {
     addToGraph = (node: Node, forcingNodes: Array<Node> = []): void => {
         this.implicationGraph = this.implicationGraph.addVertex(node);
 
-        forcingNodes.forEach(fromNode => this.implicationGraph = this.implicationGraph.addEdge(fromNode, node));
+        forcingNodes.forEach(fromNode => {
+            this.implicationGraph = this.implicationGraph.addEdge(fromNode, node);
+        });
     }
 
-    // finds and returns all nodes on all paths starting at the node
+    // finds and returns all nodes on all paths starting at the given node and ending at the conflict clause
     findAllPathsFromNode = (node: Node): Array<Map<Node, number>> => {
         let allPaths: Array<Map<Node, number>> = new Array<Map<Node, number>>();
         let path: Array<[Node, number]> = new Array<[Node, number]>();
@@ -304,13 +332,16 @@ export default class CDCL {
                 // this is the conflict clause
                 if (neighbor.isConflictNode) {
                     let pathMap: Map<Node, number> = new Map<Node, number>();
-                    path.forEach(entry => pathMap.set(entry[0], entry[1]))
+                    path.forEach(entry => {
+                        pathMap.set(entry[0], entry[1]);
+                    })
                     allPaths.push(pathMap);
                 } else {
                     path.push([neighbor, path.length]);
                     findAllPathsHelper(allPaths, path);
                     path.pop();
                 }
+                return true;
             });
         }
 
