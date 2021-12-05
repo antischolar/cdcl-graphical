@@ -1,5 +1,6 @@
 import CDCL from "./cdcl";
 import Literal from "./Literal";
+import NaiveSAT from "./NaiveSAT";
 
 let generateNegationClause = (a: Map<String, Boolean>): Array<Literal> => {
     let c: Array<Literal> = [];
@@ -8,6 +9,40 @@ let generateNegationClause = (a: Map<String, Boolean>): Array<Literal> => {
         c.push(literal);
     }
     return c;
+}
+
+let assignmentsAreEqual = (a: Array<Map<String, Boolean>>, b: Array<Map<String, Boolean>>): boolean => {
+    let satisfied = true;
+
+    a.forEach(map1 => {
+        let val = b.find(map2 => {
+            let res = map1.size === map2.size;
+            for (const entry of map1.entries()) {
+                res = res && (entry[1] === map2.get(entry[0]));
+            }
+            return res;
+        })
+        if (val === undefined) {
+            satisfied = false;
+        }
+    });
+
+    b.forEach(map1 => {
+        let val = a.find(map2 => {
+            let res = map1.size === map2.size;
+            for (const entry of map1.entries()) {
+                res = res && (entry[1] === map2.get(entry[0]));
+            }
+            return res;
+        })
+        if (val === undefined) {
+            console.log(map1)
+            satisfied = false;
+        }
+    });
+    console.log(a.length)
+    console.log(b.length)
+    return satisfied && a.length === b.length;
 }
 
 let literal1: Literal = new Literal(true, "p1");
@@ -39,7 +74,15 @@ let clause9 = [notliteral1, notliteral2];
 let clause10 = [notliteral1, literal2, literal4];
 
 
-// let clauses = [clause1, clause2, clause3, clause4, clause5, clause6];
+let allClauses = [clause1, clause2, clause3, clause4, clause5, clause6, clause7, clause8, clause9, clause10];
+
+let clauses: Array<Array<Literal>> = []
+
+allClauses.forEach(c => {
+    if (Math.random() > 0.8) {
+        clauses.push(c)
+    }
+});
 
 let clauses = [clause1]
 // let clauses = [clause1, clause7, clause8, clause9, clause10];
