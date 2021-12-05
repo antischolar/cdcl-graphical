@@ -84,54 +84,23 @@ allClauses.forEach(c => {
     }
 });
 
-// let clauses = [clause1]
+let clauses = [clause1]
 // let clauses = [clause1, clause7, clause8, clause9, clause10];
 
 let CDCLInstance1 = new CDCL(clauses)
-let CDCLInstance1Checker = new NaiveSAT(clauses);
-let assignment1 = CDCLInstance1.solve();
-let assignment1Arr = [];
-let assignment2 = CDCLInstance1Checker.solve();
-let assignment2Arr = [];
-while (assignment1.size != 0) {
+let assignment = CDCLInstance1.solve();
+
+while (assignment.size != 0) {
     // if (assignment.get("p1") && !assignment.get("p2") && !assignment.get("p4")) {
-        // console.log(assignment);
+        console.log(new Map(assignment.toKeyedSeq()));
         // console.log(CDCLInstance1.clauses);
     // }
-    assignment1Arr.push(assignment1);
-
-    const negationClause1 = generateNegationClause(assignment1);
-    CDCLInstance1 = new CDCL(CDCLInstance1.clauses);
-    CDCLInstance1.addClause(negationClause1);
-    assignment1 = CDCLInstance1.solve();
+    const negationClause = generateNegationClause(new Map(assignment.toKeyedSeq()));
+    CDCLInstance1 = new CDCL(Array.from(CDCLInstance1.clauses));
+    CDCLInstance1.addClause(negationClause);
+    assignment = CDCLInstance1.solve();
 }
 
-while (assignment2.size != 0) {
-    // if (assignment.get("p1") && !assignment.get("p2") && !assignment.get("p4")) {
-        // console.log(assignment);
-        // console.log(CDCLInstance1.clauses);
-    // }
-    assignment2Arr.push(assignment2);
-
-    const negationClause2 = generateNegationClause(assignment2);
-    CDCLInstance1Checker = new NaiveSAT(CDCLInstance1Checker.clauses);
-    CDCLInstance1Checker.addClause(negationClause2);
-    assignment2 = CDCLInstance1Checker.solve();
-}
-
-console.log(assignmentsAreEqual(assignment1Arr, assignment2Arr));
-// console.log(assignment1Arr);
-// console.log(assignment2Arr);
-
-
-
-// CDCLInstance1.assignments = new Map<String, Boolean>();
-// CDCLInstance1.assignments.set("p1", false);
-// CDCLInstance1.assignments.set("p2", false);
-// CDCLInstance1.assignments.set("p3", false);
-// CDCLInstance1.assignments.set("p4", true);
-// console.log(CDCLInstance1.findConflict() === undefined);
-// console.log(CDCLInstance1.clauses);
 // console.log(assignment);
 // console.log(CDCLInstance1.clauses);
 
