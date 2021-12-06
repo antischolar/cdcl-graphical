@@ -1,4 +1,4 @@
-import Literal from "./Literal";
+import Literal from "../lib/Literal";
 
 export default class NaiveSAT {
     clauses: Array<Array<Literal>>;
