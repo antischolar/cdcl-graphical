@@ -95,7 +95,7 @@ let assignment2Arr = [];
 let date = new Date();
 
 let timeStart = date.getTime();
-let assignment1 = CDCLInstance1.solve();
+let assignment1 = new Map(CDCLInstance1.solve().toKeyedSeq());
 while (assignment1.size != 0) {
     // if (assignment.get("p1") && !assignment.get("p2") && !assignment.get("p4")) {
         // console.log(assignment);
@@ -104,9 +104,9 @@ while (assignment1.size != 0) {
     assignment1Arr.push(assignment1);
 
     const negationClause1 = generateNegationClause(assignment1);
-    CDCLInstance1 = new CDCL(CDCLInstance1.clauses);
+    CDCLInstance1 = new CDCL(Array.from(CDCLInstance1.clauses));
     CDCLInstance1.addClause(negationClause1);
-    assignment1 = CDCLInstance1.solve();
+    assignment1 = new Map(CDCLInstance1.solve());
 }
 let timeEnd = date.getTime();
 
@@ -117,14 +117,13 @@ timeStart = date.getTime();
 let assignment2 = CDCLInstance1Checker.solve();
 while (assignment2.size != 0) {
     // if (assignment.get("p1") && !assignment.get("p2") && !assignment.get("p4")) {
-        // console.log(assignment);
+        console.log(assignment2);
         // console.log(CDCLInstance1.clauses);
     // }
     assignment2Arr.push(assignment2);
-
-    const negationClause2 = generateNegationClause(assignment2);
-    CDCLInstance1Checker = new NaiveSAT(CDCLInstance1Checker.clauses);
-    CDCLInstance1Checker.addClause(negationClause2);
+    const negationClause = generateNegationClause(new Map(assignment2));
+    CDCLInstance1 = new CDCL(Array.from(CDCLInstance1Checker.clauses));
+    CDCLInstance1.addClause(negationClause);
     assignment2 = CDCLInstance1Checker.solve();
 }
 timeEnd = date.getTime();
