@@ -79,7 +79,7 @@ let allClauses = [clause1, clause2, clause3, clause4, clause5, clause6, clause7,
 let clauses: Array<Array<Literal>> = []
 
 allClauses.forEach(c => {
-    if (Math.random() > 0) {
+    if (Math.random() > 0.5) {
         clauses.push(c)
     }
 });
@@ -117,13 +117,13 @@ timeStart = date.getTime();
 let assignment2 = CDCLInstance1Checker.solve();
 while (assignment2.size != 0) {
     // if (assignment.get("p1") && !assignment.get("p2") && !assignment.get("p4")) {
-        console.log(assignment2);
+        // console.log(assignment2);
         // console.log(CDCLInstance1.clauses);
     // }
     assignment2Arr.push(assignment2);
     const negationClause = generateNegationClause(new Map(assignment2));
-    CDCLInstance1 = new CDCL(Array.from(CDCLInstance1Checker.clauses));
-    CDCLInstance1.addClause(negationClause);
+    CDCLInstance1Checker = new NaiveSAT(Array.from(CDCLInstance1Checker.clauses));
+    CDCLInstance1Checker.addClause(negationClause);
     assignment2 = CDCLInstance1Checker.solve();
 }
 timeEnd = date.getTime();
