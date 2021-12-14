@@ -2,18 +2,18 @@ import CDCL from "../lib/CDCL";
 import Literal from "../lib/Literal";
 import NaiveSAT from "./NaiveSAT";
 
-let generateNegationClause = (a: Map<String, Boolean>): Array<Literal> => {
+let generateNegationClause = (a: Map<string, boolean>): Array<Literal> => {
   let c: Array<Literal> = [];
   for (const entry of a.entries()) {
-    const literal = new Literal(!entry[1].valueOf(), entry[0].valueOf());
+    const literal = new Literal(!entry[1], entry[0]);
     c.push(literal);
   }
   return c;
 };
 
 let assignmentsAreEqual = (
-  a: Array<Map<String, Boolean>>,
-  b: Array<Map<String, Boolean>>
+  a: Array<Map<string, boolean>>,
+  b: Array<Map<string, boolean>>
 ): boolean => {
   let satisfied = true;
 
@@ -148,10 +148,15 @@ console.log(
     assignment2Arr
   )}`
 );
+
+if (!assignmentsAreEqual(assignment1Arr, assignment2Arr)) {
+  process.exit(1);
+}
+
 // console.log(assignment1Arr);
 // console.log(assignment2Arr);
 
-// CDCLInstance1.assignments = new Map<String, Boolean>();
+// CDCLInstance1.assignments = new Map<string, boolean>();
 // CDCLInstance1.assignments.set("p1", false);
 // CDCLInstance1.assignments.set("p2", false);
 // CDCLInstance1.assignments.set("p3", false);

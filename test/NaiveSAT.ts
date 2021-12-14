@@ -2,17 +2,17 @@ import Literal from "../lib/Literal";
 
 export default class NaiveSAT {
     clauses: Array<Array<Literal>>;
-    assignments: Map<String, Boolean>;
-    literals: Array<String>;
+    assignments: Map<string, boolean>;
+    literals: Array<string>;
     
     constructor(clauses: Array<Array<Literal>>) {
         this.clauses = [];
         this.literals = [];
-        let literalSet: Set<String> = new Set<String>();
+        let literalSet: Set<string> = new Set<string>();
         clauses.forEach(c => {
             const clause: Array<Literal> = [];
             c.forEach(literal => {
-                clause.push({...literal});
+                clause.push(literal);
                 literalSet.add(literal.symbol);
             });
             this.clauses.push(clause);
@@ -26,7 +26,7 @@ export default class NaiveSAT {
 
     addClause = (clause: Array<Literal>): void => {
         this.clauses.push(clause);
-        let set: Set<String> = new Set<String>(this.literals);
+        let set: Set<string> = new Set<string>(this.literals);
 
         clause.forEach(lit => {
             set.add(lit.symbol);
@@ -35,7 +35,7 @@ export default class NaiveSAT {
         this.literals = Array.from(set);
     }
 
-    solve = (): Map<String, Boolean> => {
+    solve = (): Map<string, boolean> => {
         this.solveHelper(0);
 
         return this.assignments;
@@ -110,6 +110,6 @@ export default class NaiveSAT {
             return literal;
         }
 
-        return assignedValue.valueOf() === literal.sign;
+        return assignedValue === literal.sign;
     }
 }

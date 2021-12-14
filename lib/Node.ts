@@ -1,30 +1,49 @@
+import { Record } from "immutable";
+
 import Literal from "./Literal";
 
-export default class Node {
-    decisionLevel: number;
-    literal: Literal;
-    clause: number;
-    isDecisionLiteral: boolean;
-    isConflictNode: boolean;
+export default class Node extends Record<{
+  decisionLevel: number;
+  literal: Literal;
+  clause: number | null;
+  isDecisionLiteral: boolean;
+  isConflictNode: boolean;
+}>({
+  decisionLevel: NaN,
+  literal: new Literal(true, "default"),
+  clause: null,
+  isDecisionLiteral: false,
+  isConflictNode: false,
+}) {
+  // Unfortunately, records require default values for every field. Those default
+  // values can be null or undefined, but then that requires that our types permit
+  // those values making client code more complicated with unnecessary checks.
 
-    constructor(decisionLevel: number, literal: Literal, clause: number, isDecisionLiteral: boolean, isConflictNode: boolean = false) {
-        this.decisionLevel = decisionLevel;
-        this.literal = literal;
-        this.clause = clause;
-        this.isDecisionLiteral = isDecisionLiteral;
-        this.isConflictNode = isConflictNode;
+  constructor(
+    decisionLevel: number,
+    literal: Literal,
+    clause: number | null,
+    isDecisionLiteral: boolean,
+    isConflictNode: boolean = false
+  ) {
+    super({
+      decisionLevel,
+      literal,
+      clause,
+      isDecisionLiteral,
+      isConflictNode,
+    });
+  }
+
+  toString = (): string => {
+    if (this.isConflictNode) {
+      return `κ : C_${this.clause! + 1}`;
     }
 
-    // taken from here: https://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
-    hashCode = (): number => {
-        let stringified: string = JSON.stringify(this);
-        var hash = 0, i, chr;
-        if (stringified.length === 0) return hash;
-        for (i = 0; i < stringified.length; i++) {
-          chr   = stringified.charCodeAt(i);
-          hash  = ((hash << 5) - hash) + chr;
-          hash |= 0; // Convert to 32bit integer
-        }
-        return hash;
+    if (this.isDecisionLiteral) {
+      return `${this.literal}@${this.decisionLevel}`;
     }
+
+    return `${this.literal}@${this.decisionLevel} : C_${this.clause! + 1}`;
+  };
 }
