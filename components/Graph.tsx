@@ -43,7 +43,7 @@ const toVis = (impGraph: ImmutableGraph<Node>) => {
         .toArray()
         .map((vertex) => ({
           id: vertex.literal.symbol,
-          label: vertex.getLabel(),
+          label: vertex.toString(),
           shape:
             vertex.isDecisionLiteral || vertex.isConflictNode
               ? "ellipse"

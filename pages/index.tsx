@@ -104,9 +104,20 @@ const Home: NextPage = () => {
         new Literal(false, "p3"),
         new Literal(true, "p4"),
       ],
+      [
+        new Literal(false, "p1"),
+        new Literal(false, "p8"),
+        new Literal(false, "p2"),
+        new Literal(false, "p7"),
+        new Literal(false, "p6"),
+        new Literal(false, "p5"),
+        new Literal(false, "p3"),
+        new Literal(false, "p4"),
+      ],
     ]);
 
-    cdcl.solve();
+    const assignment = cdcl.solve();
+    console.warn(assignment.size > 0 ? "SAT" : "UNSAT");
 
     console.log(cdcl.history.length);
 

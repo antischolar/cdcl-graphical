@@ -6,8 +6,8 @@ import Snapshot from "./Snapshot";
 
 export default class CDCL {
   clauses: Immutable.List<Array<Literal>>;
-  assignments: Immutable.Map<String, Boolean>;
-  unassigned: Immutable.Set<String>;
+  assignments: Immutable.Map<string, boolean>;
+  unassigned: Immutable.Set<string>;
   implicationGraph: ImmutableGraph<Node>;
   level: number;
 
@@ -16,17 +16,17 @@ export default class CDCL {
 
   constructor(clauses: Array<Array<Literal>>) {
     this.clauses = Immutable.List();
-    this.unassigned = Immutable.Set<String>();
+    this.unassigned = Immutable.Set<string>();
     this.implicationGraph = new ImmutableGraph<Node>();
     clauses.forEach((c) => {
       const clause: Array<Literal> = [];
       c.forEach((literal) => {
-        clause.push({ ...literal });
+        clause.push(literal);
         this.unassigned = this.unassigned.add(literal.symbol);
       });
       this.clauses = this.clauses.push(clause);
     });
-    this.assignments = Immutable.Map<String, Boolean>();
+    this.assignments = Immutable.Map<string, boolean>();
     this.level = 0;
     this.history = [];
   }
@@ -42,17 +42,15 @@ export default class CDCL {
   };
 
   // returns a map that is a satisfying assignment
-  solve = (): Immutable.Map<String, Boolean> => {
+  solve = (): Immutable.Map<string, boolean> => {
     while (this.unassigned.size > 0) {
       while (this.unitProp() === this.CONFLICT) {
         if (this.level === 0) {
-          return Immutable.Map<String, Boolean>();
+          return Immutable.Map<string, boolean>();
         } else {
           const [b, C] = this.analyzeConflict();
 
-          // console.log(C);
-          // console.log(this.level)
-          // console.log(b)
+          // console.log("solve", "C", C, "level", this.level, "b", b);
           this.clauses = this.clauses.push(C);
 
           this.removeAllAtLevelGreaterThan(b);
@@ -62,6 +60,8 @@ export default class CDCL {
 
       this.level++;
       this.decideLiteral();
+
+      // console.log("solve", "unassigned size", this.unassigned.size);
     }
 
     return this.assignments;
@@ -71,14 +71,16 @@ export default class CDCL {
   unitProp = (): boolean => {
     let [lit, ind] = this.findUnitClause();
 
+    // console.log("unitProps", "lit", lit, "ind", ind);
+
     while (lit) {
-      // console.log(lit);
+      // console.log("unitProp", lit);
       this.assignments = this.assignments.set(lit.symbol, lit.sign);
       this.unassigned = this.unassigned.delete(lit.symbol);
 
       const forcedNode: Node = new Node(this.level, lit, ind, false);
       const forcingNodes: Array<Node> = this.collectForcingNodes(
-        forcedNode.clause,
+        forcedNode.clause!,
         lit
       );
       this.addToGraph(forcedNode, forcingNodes);
@@ -86,7 +88,7 @@ export default class CDCL {
       const potentialConflict: Node | undefined = this.findConflict();
       if (potentialConflict !== undefined) {
         const forcingConflictNodes = this.collectForcingNodes(
-          potentialConflict.clause
+          potentialConflict.clause!
         );
         this.addToGraph(potentialConflict, forcingConflictNodes);
         return this.CONFLICT;
@@ -169,10 +171,7 @@ export default class CDCL {
       return;
     }
 
-    let literal: Literal = new Literal(
-      true,
-      Array.from(this.unassigned)[0].valueOf()
-    );
+    let literal: Literal = new Literal(true, Array.from(this.unassigned)[0]);
 
     let ind: number = 0;
     for (let i = 0; i < this.clauses.size; i++) {
@@ -191,16 +190,34 @@ export default class CDCL {
     this.unassigned = this.unassigned.delete(literal.symbol);
     this.assignments = this.assignments.set(literal.symbol, true);
 
+    // let node: Node = new Node(this.level, literal, null, true); // TODO!
     let node: Node = new Node(this.level, literal, ind, true);
+
+    // console.log(
+    //   "decideLiteral",
+    //   node.decisionLevel,
+    //   node.clause,
+    //   node.isConflictNode,
+    //   node.isDecisionLiteral
+    // );
 
     this.addToGraph(node);
   };
 
   // finds a unit clause in the clause database
   findUnitClause = (): [Literal | undefined, number] => {
+    // console.log("findUnitClause", "assignment", this.assignments.toString());
+
     let simplifiedClause: Literal | undefined = undefined;
     let clauseIndex: number = this.clauses.findIndex((clause) => {
       const evaluatedClause = this.evaluateClause(clause);
+      // console.log(
+      //   "findUnitClause",
+      //   typeof evaluatedClause === "boolean"
+      //     ? evaluatedClause
+      //     : evaluatedClause.map((item) => item.toString())
+      // );
+
       if (
         typeof evaluatedClause !== "boolean" &&
         evaluatedClause.length === 1
@@ -237,7 +254,11 @@ export default class CDCL {
     let simplifiedClause: Array<Literal> = [];
     let ret = false;
 
+    // console.log("evaluateClause", "clause", clause);
+
     clause.forEach((lit) => {
+      // console.log("evaluateClause", "lit", lit.sign, lit.symbol);
+
       let result: boolean | Literal = this.evaluateLiteral(lit);
       if (typeof result !== "boolean") {
         simplifiedClause.push(lit);
@@ -258,11 +279,18 @@ export default class CDCL {
   // evaluates a literal to either a boolean value or a Literal
   evaluateLiteral = (literal: Literal): boolean | Literal => {
     let assignedValue = this.assignments.get(literal.symbol);
+
+    // console.log(
+    //   "evaluateLiteral",
+    //   "literal",
+    //   literal.toString(),
+    // );
+
     if (assignedValue === undefined) {
       return literal;
     }
 
-    return assignedValue.valueOf() === literal.sign;
+    return assignedValue === literal.sign;
   };
 
   // finds and returns the first UIP in the implication graph
@@ -302,7 +330,7 @@ export default class CDCL {
     }
 
     if (firstUIP === undefined) {
-      console.log(potentialUIPs);
+      // console.log("findFirstUIP", "potentialUIPs", potentialUIPs);
       throw new Error("no UIP was found");
     }
 
@@ -334,9 +362,16 @@ export default class CDCL {
         if (node === undefined) {
           this.implicationGraph
             .getVertices()
-            .forEach((vertex) => console.log(vertex));
-          console.log(this.assignments);
-          console.log(lit);
+            .forEach((vertex) =>
+              console.log("collectForcingNodes", "vertex", vertex)
+            );
+          console.log(
+            "collectForcingNodes",
+            "assignments",
+            this.assignments,
+            "literal",
+            lit
+          );
           throw new Error(
             "assigned literal does not have a node in the implication graph"
           );

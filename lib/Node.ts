@@ -1,17 +1,17 @@
-import Literal from "./Literal";
-
 import { Record } from "immutable";
+
+import Literal from "./Literal";
 
 export default class Node extends Record<{
   decisionLevel: number;
   literal: Literal;
-  clause: number;
+  clause: number | null;
   isDecisionLiteral: boolean;
   isConflictNode: boolean;
 }>({
   decisionLevel: NaN,
   literal: new Literal(true, "default"),
-  clause: NaN,
+  clause: null,
   isDecisionLiteral: false,
   isConflictNode: false,
 }) {
@@ -22,7 +22,7 @@ export default class Node extends Record<{
   constructor(
     decisionLevel: number,
     literal: Literal,
-    clause: number,
+    clause: number | null,
     isDecisionLiteral: boolean,
     isConflictNode: boolean = false
   ) {
@@ -35,13 +35,15 @@ export default class Node extends Record<{
     });
   }
 
-  getLabel = (): string => {
+  toString = (): string => {
     if (this.isConflictNode) {
-      return `K : C_${this.clause + 1}`;
+      return `κ : C_${this.clause! + 1}`;
     }
 
-    return `${this.literal.sign ? "" : "not "}${this.literal.symbol}@${
-      this.decisionLevel
-    }${this.isDecisionLiteral ? "" : ` : ${this.clause + 1}`}`;
+    if (this.isDecisionLiteral) {
+      return `${this.literal}@${this.decisionLevel}`;
+    }
+
+    return `${this.literal}@${this.decisionLevel} : C_${this.clause! + 1}`;
   };
 }

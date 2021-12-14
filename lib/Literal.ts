@@ -10,4 +10,8 @@ export default class Literal extends Record<{
   constructor(sign: boolean, symbol: string) {
     super({ sign, symbol });
   }
+
+  toString = (): string => {
+    return `${this.sign ? "" : "¬"}${this.symbol}`;
+  };
 }

@@ -6,15 +6,15 @@ import Node from "./Node";
 
 export default class Snapshot {
   clauses: Immutable.List<Array<Literal>>;
-  assignments: Immutable.Map<String, Boolean>;
-  unassigned: Immutable.Set<String>;
+  assignments: Immutable.Map<string, boolean>;
+  unassigned: Immutable.Set<string>;
   implicationGraph: ImmutableGraph<Node>;
   level: number;
 
   constructor(
     clauses: Immutable.List<Array<Literal>>,
-    assignments: Immutable.Map<String, Boolean>,
-    unassigned: Immutable.Set<String>,
+    assignments: Immutable.Map<string, boolean>,
+    unassigned: Immutable.Set<string>,
     implicationGraph: ImmutableGraph<Node>,
     level: number
   ) {
