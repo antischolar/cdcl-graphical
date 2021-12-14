@@ -1,5 +1,3 @@
-import CDCL from "../lib/CDCL";
-import Literal from "../lib/Literal";
 import Snapshot from "../lib/Snapshot";
 import ImmutableGraph from "../lib/ImmutableGraph";
 import Node from "../lib/Node";
@@ -18,16 +16,10 @@ const Graph = ({ snapshot }: GraphProps) => {
   useEffect(() => {
     if (!visRef.current) return;
 
-    const network = new Network(
-      visRef.current,
-      toVis(snapshot.implicationGraph),
-      {
-        interaction: { zoomView: false },
-      }
-    );
+    new Network(visRef.current, toVis(snapshot.implicationGraph), {});
   }, [visRef, snapshot.implicationGraph]);
 
-  return <div className="border h-96 w-2/3" ref={visRef} />;
+  return <div className="h-full w-full" ref={visRef} />;
 };
 
 export default Graph;
