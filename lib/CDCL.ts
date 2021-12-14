@@ -147,6 +147,10 @@ export default class CDCL {
       }
     });
 
+    if (maxLevel == -1) {
+      maxLevel = this.level - 1;
+    }
+
     return [maxLevel, literalsOnBoundary];
   };
 
