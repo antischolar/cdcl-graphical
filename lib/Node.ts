@@ -1,11 +1,23 @@
 import Literal from "./Literal";
 
-export default class Node {
+import { Record } from "immutable";
+
+export default class Node extends Record<{
   decisionLevel: number;
   literal: Literal;
   clause: number;
   isDecisionLiteral: boolean;
   isConflictNode: boolean;
+}>({
+  decisionLevel: NaN,
+  literal: new Literal(true, "default"),
+  clause: NaN,
+  isDecisionLiteral: false,
+  isConflictNode: false,
+}) {
+  // Unfortunately, records require default values for every field. Those default
+  // values can be null or undefined, but then that requires that our types permit
+  // those values making client code more complicated with unnecessary checks.
 
   constructor(
     decisionLevel: number,
@@ -14,27 +26,14 @@ export default class Node {
     isDecisionLiteral: boolean,
     isConflictNode: boolean = false
   ) {
-    this.decisionLevel = decisionLevel;
-    this.literal = literal;
-    this.clause = clause;
-    this.isDecisionLiteral = isDecisionLiteral;
-    this.isConflictNode = isConflictNode;
+    super({
+      decisionLevel,
+      literal,
+      clause,
+      isDecisionLiteral,
+      isConflictNode,
+    });
   }
-
-  // taken from here: https://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
-  //   hashCode = (): number => {
-  //     let stringified: string = JSON.stringify(this);
-  //     var hash = 0,
-  //       i,
-  //       chr;
-  //     if (stringified.length === 0) return hash;
-  //     for (i = 0; i < stringified.length; i++) {
-  //       chr = stringified.charCodeAt(i);
-  //       hash = (hash << 5) - hash + chr;
-  //       hash |= 0; // Convert to 32bit integer
-  //     }
-  //     return hash;
-  //   };
 
   getLabel = (): string => {
     if (this.isConflictNode) {

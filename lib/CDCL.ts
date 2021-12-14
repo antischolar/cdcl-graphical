@@ -301,7 +301,7 @@ export default class CDCL {
         }
 
         clause.forEach(lit => {
-            if ((forcedLiteral === undefined || !forcedLiteral.isEqual(lit)) && this.assignments.has(lit.symbol)) {
+            if ((forcedLiteral === undefined || !forcedLiteral.equals(lit)) && this.assignments.has(lit.symbol)) {
                 let node: Node | undefined = this.implicationGraph.getVertices().find(vertex => vertex.literal.symbol === lit.symbol);
                 
                 if (node === undefined) {

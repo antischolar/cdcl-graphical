@@ -108,6 +108,8 @@ const Home: NextPage = () => {
 
     cdcl.solve();
 
+    console.log(cdcl.history.length);
+
     return cdcl;
   }, []);
 
