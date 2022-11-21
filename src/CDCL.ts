@@ -50,9 +50,6 @@ export default class CDCL {
                 } else {
                     const [b, C] = this.analyzeConflict();
 
-                    // console.log(C);
-                    // console.log(this.level)
-                    // console.log(b)
                     this.clauses = this.clauses.push(C);
 
                     this.removeAllAtLevelGreaterThan(b);
@@ -72,7 +69,6 @@ export default class CDCL {
         let [lit, ind] = this.findUnitClause();
 
         while (lit) {
-            // console.log(lit);
             this.assignments = this.assignments.set(lit.symbol, lit.sign);
             this.unassigned = this.unassigned.delete(lit.symbol);
 

@@ -89,8 +89,8 @@ allClauses.forEach(c => {
 
 let CDCLInstance1 = new CDCL(clauses)
 let CDCLInstance1Checker = new NaiveSAT(clauses);
-let assignment1Arr = [];
-let assignment2Arr = [];
+let assignment1Arr: Array<Map<String, Boolean>> = [];
+let assignment2Arr: Array<Map<String, Boolean>> = [];
 
 let date = new Date();
 
